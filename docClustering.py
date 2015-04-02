@@ -10,6 +10,7 @@ import re
 import pandas as pd
 import random
 import numpy as np
+import scipy
 
 print 'reading files..'
 
@@ -43,7 +44,7 @@ for title, words in documents.iteritems():
 for title in documents.keys():
     raw_freq[title] = {}
     for word in idf_counts:
-        raw_freq[title][word] = documents[key].count(word)
+        raw_freq[title][word] = documents[title].count(word)
 
 idf_weights = {}
 for word in idf_counts.keys():
@@ -55,15 +56,69 @@ for title in raw_freq.keys():
     for word in raw_freq[title]:
         weights[title][word] = raw_freq[title][word]*idf_weights[word]
 
-unique_words_sorted = np.array(sorted(idf_counts.keys()))
+unique_words = np.array(sorted(idf_counts.keys()))
 titles = np.array(sorted(documents.keys()))
 
 weights_matrix = []
 for title in titles:
     this_play_weights = weights[title]
-    row = [this_play_weights[word] for word in unique_words_sorted]
+    row = [this_play_weights[word] for word in unique_words]
     weights_matrix.append(row)
 
-weights_matrix = np.matrix(weights_matrix)
+weights_matrix = np.array(weights_matrix)
 
 print "..done in %f s" % (time() - t0)
+
+##################
+##### KMeans #####
+##################
+
+def allocate_to_centroids(dat, centroids):
+    clusters = []
+    for datapoint in dat:
+        dist = np.array([scipy.spatial.distance.cosine(datapoint, centroid) for centroid in centroids])
+        clusters.append(dist.argmin())
+    return(np.array(clusters))
+
+def recalculate_centroids(dat, clusters):
+    new_centroids = []
+    for i in set(clusters):
+        new_centroids.append(dat[np.array([index for index, group in enumerate(clusters) if group == i]),].mean(axis = 0))
+    return(np.array(new_centroids))
+
+def km(dat, k):
+    """ 
+    returns a partition of dat in k groups
+    uses kmeans algorithm with cosine similarity
+    dat = numpy.matrix object (n x m, n data points, m variables)
+    k = int, number of centers
+    """
+
+    # initialize with k random data points
+    centroids = random.sample(dat, k)
+    # allocate to centroid of minimum cosine distance
+    clusters = allocate_to_centroids(dat, centroids)
+    # recalculate centroids as average over the cluster
+    new_centroids = recalculate_centroids(dat, clusters)
+
+    iternum = 0
+
+    while not np.array_equal(centroids, new_centroids) and iternum <= 20:
+        iternum += 1
+        centroids = new_centroids
+        clusters = allocate_to_centroids(dat, centroids)
+        new_centroids = recalculate_centroids(dat, clusters)
+        print 'iteration', iternum
+
+    return(clusters)
+
+test = km(weights_matrix, 2)
+
+
+## find indeces:
+# groups = [0, 0, 0, 1, 0, 1, 1, 0]  note, this a list
+# titles[np.array([index for index, group in enumerate(groups) if group == 1])]
+# also, for matrices
+# weights_matrix[np.array([index for index, group in enumerate(groups) if group == 1]), :10]
+# if groups = np.array([0, 0, 0, 1, 0, 1, 1, 0], int)
+# weights_matrix[[index for index, group in enumerate(groups) if group == 1], :10]
