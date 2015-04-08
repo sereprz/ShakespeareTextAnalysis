@@ -3,8 +3,7 @@ import numpy as np
 def cluster_points(X, mu):
     clusters  = {}
     for x in X:
-        bestmukey = min([(i[0], np.linalg.norm(x-mu[i[0]])) \
-                    for i in enumerate(mu)], key=lambda t:t[1])[0]
+        bestmukey = min([(i[0], np.linalg.norm(x-mu[i[0]])) for i in enumerate(mu)], key=lambda t:t[1])[0]
         try:
             clusters[bestmukey].append(x)
         except KeyError:
@@ -19,7 +18,7 @@ def reevaluate_centers(mu, clusters):
     return newmu
  
 def has_converged(mu, oldmu):
-    return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu])
+    return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu]))
  
 def find_centers(X, K):
     # Initialize to K random centers

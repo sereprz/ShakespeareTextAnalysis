@@ -73,10 +73,14 @@ print "..done in %f s" % (time() - t0)
 ##### KMeans #####
 ##################
 
+# The algorithm has converged when the assignments no longer change. Since both steps optimize the WCSS objective, and there only exists a finite number of such partitionings, the algorithm must converge to a (local) optimum. There is no guarantee that the global optimum is found using this algorithm.
+
+# The algorithm is often presented as assigning objects to the nearest cluster by distance. The standard algorithm aims at minimizing the WCSS objective, and thus assigns by "least sum of squares", which is exactly equivalent to assigning by the smallest Euclidean distance. Using a different distance function other than (squared) Euclidean distance may stop the algorithm from converging.[citation needed] Various modifications of k-means such as spherical k-means and k-medoids have been proposed to allow using other distance measures.
+
 def allocate_to_centroids(dat, centroids):
     clusters = []
     for datapoint in dat:
-        dist = np.array([scipy.spatial.distance.cosine(datapoint, centroid) for centroid in centroids])
+        dist = np.array([scipy.spatial.distance.euclidean(datapoint, centroid) for centroid in centroids])
         clusters.append(dist.argmin())
     return(np.array(clusters))
 
@@ -103,7 +107,7 @@ def km(dat, k):
 
     iternum = 0
 
-    while not np.array_equal(centroids, new_centroids) and iternum <= 20:
+    while not np.array_equal(centroids, new_centroids):
         iternum += 1
         centroids = new_centroids
         clusters = allocate_to_centroids(dat, centroids)
@@ -112,7 +116,14 @@ def km(dat, k):
 
     return(clusters)
 
-test = km(weights_matrix, 2)
+nstart = 10
+
+for i in range(nstart):
+    
+
+############################
+##### Spherical KMeans #####
+############################
 
 def recalculate_concept_vectors(dat, clusters):
     concept_vectors = []
@@ -158,11 +169,3 @@ def SPKM(dat, k):
         concept_vectors = recalculate_concept_vectors(dat, clusters)
         print 'iter', t, 'delta =', objective_function(dat, new_clusters) - objective_function(dat, clusters)
     return(np.array(clusters))
-
-## find indeces:
-# groups = [0, 0, 0, 1, 0, 1, 1, 0]  note, this a list
-# titles[np.array([index for index, group in enumerate(groups) if group == 1])]
-# also, for matrices
-# weights_matrix[np.array([index for index, group in enumerate(groups) if group == 1]), :10]
-# if groups = np.array([0, 0, 0, 1, 0, 1, 1, 0], int)
-# weights_matrix[[index for index, group in enumerate(groups) if group == 1], :10]
