@@ -11,6 +11,7 @@ import pandas as pd
 import random
 import numpy as np
 import scipy
+import lda
 
 print 'reading files..'
 
@@ -65,7 +66,15 @@ for title in titles:
     row = [this_play_weights[word] for word in unique_words]
     weights_matrix.append(row)
 
-weights_matrix = np.array(weights_matrix)
+freq_matrix = []
+for title in titles:
+    this_play_freq = raw_freq[title]
+    row = [this_play_freq[word] for word in unique_words]
+    freq_matrix.append(row)
+
+weights_matrix = np.array(weights_matrix)  # k-means input
+
+freq_matrix = np.array(freq_matrix) # LDA input
 
 print "..done in %f s" % (time() - t0)
 
@@ -115,11 +124,8 @@ def km(dat, k):
         print 'iteration', iternum
 
     return(clusters)
-
-nstart = 10
-
-for i in range(nstart):
     
+model1 = km(weights_matrix, 2)
 
 ############################
 ##### Spherical KMeans #####
@@ -169,3 +175,41 @@ def SPKM(dat, k):
         concept_vectors = recalculate_concept_vectors(dat, clusters)
         print 'iter', t, 'delta =', objective_function(dat, new_clusters) - objective_function(dat, clusters)
     return(np.array(clusters))
+
+
+model2 = SPKM(weights_matrix, 2)
+
+###############
+##### LDA #####
+###############
+
+model3 = lda.LDA(n_topics=5, n_iter=500, random_state=1)
+model3.fit(freq_matrix)
+
+topic_word = model3.topic_word_
+
+n_top_words = 10
+
+for i, topic_dist in enumerate(topic_word):
+    topic_words = np.array(unique_words)[np.argsort(topic_dist)][:-n_top_words:-1]
+    print('Topic {}: {}'.format(i, ' '.join(topic_words)))
+
+doc_topic = model3.doc_topic_
+
+for n in range(10):
+    topic_most_pr = doc_topic[n].argmax()
+    print("doc: {} topic: {}\n{}...".format(n, topic_most_pr, titles[n][:50]))
+
+f, ax= plt.subplots(5, 1, figsize=(8, 6), sharex=True)
+for i, k in enumerate([1, 3, 4, 8, 9]):
+    ax[i].stem(doc_topic[k,:], linefmt='r-',
+               markerfmt='ro', basefmt='w-')
+    ax[i].set_xlim(-1, 5)
+    ax[i].set_ylim(0, 1)
+    ax[i].set_ylabel("Prob")
+    ax[i].set_title("Document {}".format(k))
+
+ax[4].set_xlabel("Topic")
+
+plt.tight_layout()
+plt.show()

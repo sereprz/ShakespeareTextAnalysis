@@ -1,24 +1,24 @@
-```{r createTestInput, tidy = TRUE}
+* create test input
+```{r createTestInput, tidy = TRUE, fig.width = 10, fig.height = 8}
 set.seed(3)
+weights <- read.csv('output.csv', header=FALSE)
 kmTestInput <- data.frame(x = runif(30, max = 5), y = runif(30, max = 5))
-km <- kmeans(kmTestInput, 2)
-#png('kmTest.png', width = 1000, height = 1000, pointsize = 12, res = 150)
-plot(kmTestInput, col = km$cluster, pch = '+')
-#dev.off()
 #write.csv(km$cluster, 'kmTestOutput.csv', row.names = FALSE, quote = FALSE)
 #write.csv(kmInputTest, 'kmTestInput.csv', row.names = FALSE, quote= FALSE)
-
+```
+* compare different starting points
+```{r compare, tidy = TRUE, fig.width = 12, fig.height = 8}
 set.seed(1)
 km1 <- kmeans(kmTestInput, 2)
-set.seed(4)
+set.seed(45)
 km2 <- kmeans(kmTestInput, 2)
-#png('kmComparison.png', width = 1000, height = 1000, pointsize = 12, res = 150)
 par(mfrow = c(1,2))
-plot(kmTestInput, pch = km1$cluster)
-plot(kmTestInput, pch = km2$cluster)
-#dev.off()
+plot(kmTestInput, pch = km1$cluster, col = km1$cluster)
+plot(kmTestInput, pch = km2$cluster, col = km2$cluster)
+```
+* sum of squares decomposition
 
- 
+```{r fun, tidy = TRUE} 
 withinSS <- function(dat, km_object) {
     # dat = k-means input matrix/dataframe
     # km_object = object of class kmeans
@@ -57,7 +57,7 @@ betweenSS <- function(dat, km_object) {
     return(between_ss)
 }
 
-totalSS <- function(dat, km_object) {
+explainedSS <- function(dat, km_object) {
     # dat = k-means input matrix/dataframe
     # km_object = object of class kmeans
     # returns total sum of squares
@@ -65,7 +65,10 @@ totalSS <- function(dat, km_object) {
     100 * betweenSS(dat, km_object)/(betweenSS(dat, km_object) + withinSS(dat, km_object))
 }
 
-totalSS(kmTestInput, km1)
+```
+* variance explained
+```{r varExplained, tidy = TRUE, fig.width = 10, fig.height = 8}
+explainedSS(kmTestInput, km1)
 100 * betweenSS(kmTestInput, km1)/(betweenSS(kmTestInput, km1) + withinSS(kmTestInput, km1)) # percentage of variance explained
 
 var_explained <- numeric()
@@ -78,13 +81,13 @@ for(i in 1:10){
 plot(var_explained) ## looks like 5 is optimal
 
 plot(kmTestInput, col = kmeans(kmTestInput, 5)$cluster, pch = '+')
+```
 
-
-##### using the shakespeare's weights matrix
-
+* using the shakespeares weights matrix
+```{r shakespeare, fig.width = 10, fig.width = 8}
 var_explained <- numeric()
 
-for(i in 1:nrow(weights)){
+for(i in 1:(nrow(weights)-1)) {
     km <- kmeans(weights, i)
     var_explained <- c(var_explained, 100 * km$betweenss/km$totss)
 }
@@ -92,4 +95,14 @@ for(i in 1:nrow(weights)){
 plot(var_explained)
 
 require(skmeans)
+
+var_explained <- numeric()
+
+for(i in 2:20) {
+    print(i)
+    km <- skmeans(as.matrix(weights), i)
+    var_explained <- c(var_explained, explainedSS(weights, km))
+}
+
+plot(var_explained)
 ``` 

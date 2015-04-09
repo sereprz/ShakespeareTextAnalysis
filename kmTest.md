@@ -1,36 +1,30 @@
+* create test input
 
 ```r
 set.seed(3)
+weights <- read.csv("output.csv", header = FALSE)
 kmTestInput <- data.frame(x = runif(30, max = 5), y = runif(30, max = 5))
-km <- kmeans(kmTestInput, 2)
-# png('kmTest.png', width = 1000, height = 1000, pointsize = 12, res = 150)
-plot(kmTestInput, col = km$cluster, pch = "+")
+# write.csv(km$cluster, 'kmTestOutput.csv', row.names = FALSE, quote =
+# FALSE) write.csv(kmInputTest, 'kmTestInput.csv', row.names = FALSE, quote=
+# FALSE)
 ```
-
-![plot of chunk createTestInput](figure/createTestInput-1.png) 
+* compare different starting points
 
 ```r
-# dev.off() write.csv(km$cluster, 'kmTestOutput.csv', row.names = FALSE,
-# quote = FALSE) write.csv(kmInputTest, 'kmTestInput.csv', row.names =
-# FALSE, quote= FALSE)
-
 set.seed(1)
 km1 <- kmeans(kmTestInput, 2)
-set.seed(4)
+set.seed(45)
 km2 <- kmeans(kmTestInput, 2)
-# png('kmComparison.png', width = 1000, height = 1000, pointsize = 12, res =
-# 150)
 par(mfrow = c(1, 2))
-plot(kmTestInput, pch = km1$cluster)
-plot(kmTestInput, pch = km2$cluster)
+plot(kmTestInput, pch = km1$cluster, col = km1$cluster)
+plot(kmTestInput, pch = km2$cluster, col = km2$cluster)
 ```
 
-![plot of chunk createTestInput](figure/createTestInput-2.png) 
+![plot of chunk compare](figure/compare-1.png) 
+* sum of squares decomposition
+
 
 ```r
-# dev.off()
-
-
 withinSS <- function(dat, km_object) {
     # dat = k-means input matrix/dataframe km_object = object of class kmeans
     # returns total within group sum of squares
@@ -68,15 +62,18 @@ betweenSS <- function(dat, km_object) {
     return(between_ss)
 }
 
-totalSS <- function(dat, km_object) {
+explainedSS <- function(dat, km_object) {
     # dat = k-means input matrix/dataframe km_object = object of class kmeans
     # returns total sum of squares
     
     100 * betweenSS(dat, km_object)/(betweenSS(dat, km_object) + withinSS(dat, 
         km_object))
 }
+```
+* variance explained
 
-totalSS(kmTestInput, km1)
+```r
+explainedSS(kmTestInput, km1)
 ```
 
 ```
@@ -101,31 +98,73 @@ for (i in 1:10) {
 }
 
 plot(var_explained)  ## looks like 5 is optimal
+```
 
+![plot of chunk varExplained](figure/varExplained-1.png) 
+
+```r
 plot(kmTestInput, col = kmeans(kmTestInput, 5)$cluster, pch = "+")
 ```
 
-![plot of chunk createTestInput](figure/createTestInput-3.png) 
+![plot of chunk varExplained](figure/varExplained-2.png) 
+
+* using the shakespeares weights matrix
 
 ```r
-##### using the shakespeare's weights matrix
-
 var_explained <- numeric()
 
-for (i in 1:nrow(weights)) {
+for(i in 1:(nrow(weights)-1)) {
     km <- kmeans(weights, i)
     var_explained <- c(var_explained, 100 * km$betweenss/km$totss)
+}
+
+plot(var_explained)
+```
+
+![plot of chunk shakespeare](figure/shakespeare-1.png) 
+
+```r
+require(skmeans)
+```
+
+```
+## Loading required package: skmeans
+```
+
+```r
+var_explained <- numeric()
+
+for(i in 2:20) {
+    print(i)
+    km <- skmeans(as.matrix(weights), i)
+    var_explained <- c(var_explained, explainedSS(weights, km))
 }
 ```
 
 ```
-## Error: number of cluster centres must lie between 1 and nrow(x)
+## [1] 2
+## [1] 3
+## [1] 4
+## [1] 5
+## [1] 6
+## [1] 7
+## [1] 8
+## [1] 9
+## [1] 10
+## [1] 11
+## [1] 12
+## [1] 13
+## [1] 14
+## [1] 15
+## [1] 16
+## [1] 17
+## [1] 18
+## [1] 19
+## [1] 20
 ```
 
 ```r
 plot(var_explained)
-
-require(skmeans)
 ```
 
-![plot of chunk createTestInput](figure/createTestInput-4.png) 
+![plot of chunk shakespeare](figure/shakespeare-2.png) 

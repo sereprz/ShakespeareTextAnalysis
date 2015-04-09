@@ -14,7 +14,7 @@ with open('../../Datastore/shakespeare.txt', 'r') as f:
 	raw = f.read()
 	titles = [t for t in set(re.findall(r'[a-z]+@{1}', raw))]
 
-	histories = ['loverscomplaint@', 'glossary@', 'kinghenryvi@', 'kingrichardiii@', 'venusandadonis@', 'rapeoflucrece@', 'kingrichardii@', 'kingjohn@', 'kinghenryiv@', 'kinghenryv@', 'sonnets@', 'various@', 'kinghenryviii@']
+	histories = ['glossary@', 'various@', 'sonnets@'] #, 'loverscomplaint@', 'kinghenryvi@', 'kingrichardiii@', 'venusandadonis@', 'rapeoflucrece@', 'kingrichardii@', 'kingjohn@', 'kinghenryiv@', 'kinghenryv@','kinghenryviii@']
 	titles = [title for title in titles if title not in histories]
 
 	lines = raw.splitlines()
@@ -44,11 +44,11 @@ for key in collection.keys():
 	names = [w.lower() for w in set(tokens[key]) if w.isupper()]
 	tokens[key] = [w for w in tokens[key] if w.lower() not in names]
 	tokens[key] = [w.lower() for w in tokens[key] if w.lower() not in stopwords + glossary] # delete stop words
-	stemmed[key] = [st.stem(w.lower()) for w in tokens[key]]
+	#stemmed[key] = [st.stem(w.lower()) for w in tokens[key]]
 
 
 	with open('../../Datastore/Shakespeare/Normalized/' + key + '_normalized.txt', 'w') as outputfile:
-		for w in stemmed[key]:
+		for w in tokens[key]: #for w in stemmed[key]:
 			outputfile.write('%s ' % w)
 
 
