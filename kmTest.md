@@ -2,7 +2,7 @@
 
 ```r
 set.seed(3)
-weights <- read.csv("output.csv", header = FALSE)
+weights <- read.csv("weights_matrix.csv", header = FALSE)
 kmTestInput <- data.frame(x = runif(30, max = 5), y = runif(30, max = 5))
 # write.csv(km$cluster, 'kmTestOutput.csv', row.names = FALSE, quote =
 # FALSE) write.csv(kmInputTest, 'kmTestInput.csv', row.names = FALSE, quote=
@@ -168,3 +168,79 @@ plot(var_explained)
 ```
 
 ![plot of chunk shakespeare](figure/shakespeare-2.png) 
+
+* LDA
+
+```r
+perpl <- numeric()
+
+for(i in 2:30) {
+    lda <- LDA(as.matrix(freq), k = i)
+    perpl <- c(perpl, perplexity(lda))
+}
+
+plot(perpl)
+```
+
+![plot of chunk lda](figure/lda-1.png) 
+
+* topic probabilities as classification variables
+
+```r
+topics <- read.csv('doc_topic.csv', header=FALSE)
+names(topics) <- paste('topic',seq(1:ncol(topics)), sep ="")
+titles <- as.vector(read.csv('titles.csv', header = FALSE)[,1])
+str(titles)
+```
+
+```
+##  chr [1:27] "allswellthatendswell" "antonyandcleopatra" ...
+```
+
+```r
+row.names(topics) <- titles
+kmtopics <- kmeans(topics, 2)
+table(kmtopics$cluster)
+```
+
+```
+## 
+##  1  2 
+## 11 16
+```
+
+```r
+titles[ kmtopics$cluster == 1]
+```
+
+```
+##  [1] "asyoulikeit"           "comedyoferrors"       
+##  [3] "loveslabourslost"      "merchantofvenice"     
+##  [5] "merrywivesofwindsor"   "midsummersnightsdream"
+##  [7] "muchadoaboutnothing"   "romeoandjuliet"       
+##  [9] "tamingoftheshrew"      "twelfthnight"         
+## [11] "twogentlemenofverona"
+```
+
+```r
+titles[ kmtopics$cluster == 2]
+```
+
+```
+##  [1] "allswellthatendswell" "antonyandcleopatra"   "coriolanus"          
+##  [4] "cymbeline"            "hamlet"               "juliuscaesar"        
+##  [7] "kinglear"             "macbeth"              "measureforemeasure"  
+## [10] "othello"              "periclesprinceoftyre" "tempest"             
+## [13] "timonofathens"        "titusandronicus"      "troilusandcressida"  
+## [16] "winterstale"
+```
+* find optimal number of groups
+
+```r
+var_explained <- numeric()
+
+for(i in 1:ncol(topics)) {
+    km <- kmeans(topics, i)
+    var_explained <- c(var_explained, 100* km$betweenss/km$totss)
+}
+```

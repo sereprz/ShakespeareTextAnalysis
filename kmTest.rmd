@@ -1,7 +1,7 @@
 * create test input
 ```{r createTestInput, tidy = TRUE, fig.width = 10, fig.height = 8}
 set.seed(3)
-weights <- read.csv('output.csv', header=FALSE)
+weights <- read.csv('weights_matrix.csv', header=FALSE)
 kmTestInput <- data.frame(x = runif(30, max = 5), y = runif(30, max = 5))
 #write.csv(km$cluster, 'kmTestOutput.csv', row.names = FALSE, quote = FALSE)
 #write.csv(kmInputTest, 'kmTestInput.csv', row.names = FALSE, quote= FALSE)
@@ -84,7 +84,7 @@ plot(kmTestInput, col = kmeans(kmTestInput, 5)$cluster, pch = '+')
 ```
 
 * using the shakespeares weights matrix
-```{r shakespeare, fig.width = 10, fig.width = 8}
+```{r shakespeare, fig.width = 10, fig.width = 8, cache = TRUE}
 var_explained <- numeric()
 
 for(i in 1:(nrow(weights)-1)) {
@@ -106,3 +106,38 @@ for(i in 2:20) {
 
 plot(var_explained)
 ``` 
+
+* LDA
+```{r lda, cache = TRUE}
+perpl <- numeric()
+
+for(i in 2:30) {
+    lda <- LDA(as.matrix(freq), k = i)
+    perpl <- c(perpl, perplexity(lda))
+}
+
+plot(perpl)
+```
+
+* topic probabilities as classification variables
+```{r topicKM}
+topics <- read.csv('doc_topic.csv', header=FALSE)
+names(topics) <- paste('topic',seq(1:ncol(topics)), sep ="")
+titles <- as.vector(read.csv('titles.csv', header = FALSE)[,1])
+str(titles)
+row.names(topics) <- titles
+kmtopics <- kmeans(topics, 2)
+table(kmtopics$cluster)
+
+titles[ kmtopics$cluster == 1]
+titles[ kmtopics$cluster == 2]
+```
+* find optimal number of groups
+```{r topicKM_var_explained, cache = TRUE}
+var_explained <- numeric()
+
+for(i in 1:ncol(topics)) {
+    km <- kmeans(topics, i)
+    var_explained <- c(var_explained, 100* km$betweenss/km$totss)
+}
+```

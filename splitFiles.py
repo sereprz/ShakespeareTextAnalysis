@@ -14,7 +14,7 @@ with open('../../Datastore/shakespeare.txt', 'r') as f:
 	raw = f.read()
 	titles = [t for t in set(re.findall(r'[a-z]+@{1}', raw))]
 
-	histories = ['glossary@', 'various@', 'sonnets@'] #, 'loverscomplaint@', 'kinghenryvi@', 'kingrichardiii@', 'venusandadonis@', 'rapeoflucrece@', 'kingrichardii@', 'kingjohn@', 'kinghenryiv@', 'kinghenryv@','kinghenryviii@']
+	histories = ['glossary@', 'various@', 'sonnets@', 'kinghenryvi@', 'kinghenryiv@', 'venusandadonis@', 'rapeoflucrece@', 'loverscomplaint@', 'kingrichardiii@', 'kingrichardii@', 'kingjohn@', 'kinghenryv@','kinghenryviii@']
 	titles = [title for title in titles if title not in histories]
 
 	lines = raw.splitlines()

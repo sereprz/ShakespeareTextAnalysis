@@ -2,12 +2,13 @@ from __future__ import division
 from sklearn.cluster import KMeans
 from time import time
 
+import matplotlib.pyplot as plt
 import collections as c
 import glob
 import nltk
 import math
 import re
-import pandas as pd
+# import pandas as pd
 import random
 import numpy as np
 import scipy
@@ -22,7 +23,7 @@ for filename in glob.glob(path):
     with open(filename, 'r') as f:
         text = f.read()
         key = re.sub( r'/', '', str(re.findall(r'/[a-z]+', filename)[0]))
-        documents[key] = nltk.word_tokenize(text)
+        documents[key] = text #nltk.word_tokenize(text)
 
 def cosine_similarity(d1, d2):
     # cosine similarity between two vectors
@@ -78,6 +79,9 @@ freq_matrix = np.array(freq_matrix) # LDA input
 
 print "..done in %f s" % (time() - t0)
 
+
+num_groups = 2
+
 ##################
 ##### KMeans #####
 ##################
@@ -89,7 +93,7 @@ print "..done in %f s" % (time() - t0)
 def allocate_to_centroids(dat, centroids):
     clusters = []
     for datapoint in dat:
-        dist = np.array([scipy.spatial.distance.euclidean(datapoint, centroid) for centroid in centroids])
+        dist = np.array([scipy.spatial.distance.cosine(datapoint, centroid) for centroid in centroids])
         clusters.append(dist.argmin())
     return(np.array(clusters))
 
@@ -125,7 +129,7 @@ def km(dat, k):
 
     return(clusters)
     
-model1 = km(weights_matrix, 2)
+model1 = km(weights_matrix, num_groups)
 
 ############################
 ##### Spherical KMeans #####
@@ -160,8 +164,12 @@ def SPKM(dat, k):
     """
 
     # set first partition using km
-    clusters = np.zeros(dat.shape[0])
-    clusters[random.sample(range(dat.shape[0]), int(dat.shape[0]/2))] = 1
+    clusters = range(k)
+    while len(clusters) < dat.shape[0]:
+        clusters.extend(range(k))
+    clusters = np.array(clusters[:dat.shape[0]])
+    random.shuffle(clusters)
+
     concept_vectors = recalculate_concept_vectors(dat, clusters)
     t = 0
     new_clusters = allocate_to_concept_vectors(dat, concept_vectors)
@@ -177,18 +185,18 @@ def SPKM(dat, k):
     return(np.array(clusters))
 
 
-model2 = SPKM(weights_matrix, 2)
+model2 = SPKM(weights_matrix, num_groups)
 
 ###############
 ##### LDA #####
 ###############
 
-model3 = lda.LDA(n_topics=5, n_iter=500, random_state=1)
+model3 = lda.LDA(n_topics= 10, n_iter=500, random_state=1)
 model3.fit(freq_matrix)
 
 topic_word = model3.topic_word_
 
-n_top_words = 10
+n_top_words = 20
 
 for i, topic_dist in enumerate(topic_word):
     topic_words = np.array(unique_words)[np.argsort(topic_dist)][:-n_top_words:-1]
@@ -196,18 +204,30 @@ for i, topic_dist in enumerate(topic_word):
 
 doc_topic = model3.doc_topic_
 
-for n in range(10):
-    topic_most_pr = doc_topic[n].argmax()
-    print("doc: {} topic: {}\n{}...".format(n, topic_most_pr, titles[n][:50]))
+km_topics = km(doc_topic, 2)
 
-f, ax= plt.subplots(5, 1, figsize=(8, 6), sharex=True)
-for i, k in enumerate([1, 3, 4, 8, 9]):
+titles[ km_topics == 0]
+titles[ km_topics == 1]
+
+# for n in range(len(freq_matrix)):
+#     topic_most_pr = doc_topic[n].argmax()
+#     print("doc: {} topic: {}\n{}...".format(n, topic_most_pr, titles[n]))
+
+#use matplotlib style sheet
+try:
+    plt.style.use('ggplot')
+except:
+    # version of matplotlib might not be recent
+    pass
+
+f, ax= plt.subplots(6, 1, figsize=(10, 8), sharex=True)
+for i, k in enumerate([8, 10, 12, 14, 16, 18]):
     ax[i].stem(doc_topic[k,:], linefmt='r-',
                markerfmt='ro', basefmt='w-')
-    ax[i].set_xlim(-1, 5)
+    ax[i].set_xlim(-1, 10)
     ax[i].set_ylim(0, 1)
     ax[i].set_ylabel("Prob")
-    ax[i].set_title("Document {}".format(k))
+    ax[i].set_title(titles[k])
 
 ax[4].set_xlabel("Topic")
 
