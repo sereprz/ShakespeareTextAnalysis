@@ -1,8 +1,10 @@
 ############################
 ##### Spherical KMeans #####
 ############################
+from __future__ import division
 import random
 import numpy as np
+
 
 def recalculate_concept_vectors(dat, clusters):
     concept_vectors = []
@@ -10,7 +12,7 @@ def recalculate_concept_vectors(dat, clusters):
         cluster_elements = dat[np.array([index for index, group in enumerate(clusters) if group == cluster]),]
         sum_of_elements = cluster_elements.sum(axis = 0)
         concept_vectors.append(sum_of_elements/np.linalg.norm(sum_of_elements))
-    return(np.array(concept_vectors))
+    return(np.array(concept_vectors).reshape((len(set(clusters)), dat.shape[1])))
 
 def allocate_to_concept_vectors(dat, concept_vectors):
     clusters = []

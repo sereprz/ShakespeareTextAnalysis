@@ -15,13 +15,15 @@ def recalculate_centroids(dat, clusters):
         new_centroids.append(dat[np.array([index for index, group in enumerate(clusters) if group == i]),].mean(axis = 0))
     return(np.array(new_centroids))
 
-def km(dat, k):
+def km(dat, k, random_state = 10):
     """ 
     returns a partition of dat in k groups
     uses kmeans algorithm with cosine similarity
     dat = numpy.matrix object (n x m, n data points, m variables)
     k = int, number of centers
     """
+
+    random.seed(random_state)
 
     # initialize with k random data points
     centroids = random.sample(dat, k)
