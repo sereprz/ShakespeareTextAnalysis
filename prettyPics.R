@@ -14,7 +14,7 @@ centroids <- rbind(apply(topic_group0, 2, mean), apply(topic_group1, 2, mean))
 
 tmp <- with(m_doc_topic, aggregate(value, list(variable, group), mean))
 
-ggplot(titles, aes(x = factor(cluster), y = year, group = factor(cluster), fill = factor(cluster))) + geom_boxplot(notch = TRUE, notchwidth = 0.2) + scale_fill_manual(values = col) + guides(fill = FALSE) + theme_bw()
+ggplot(titles, aes(x = factor(cluster), y = year, group = factor(cluster), fill = factor(cluster))) + geom_boxplot() + scale_fill_manual(values = col) + guides(fill = FALSE) + theme_bw() + xlab('Cluster')
 
 ggplot(tmp, aes(factor(Group.2), x, fill = Group.1, group = Group.1)) + geom_bar(width = .4, stat='identity', position = 'stack') + scale_fill_brewer(palette = 'Paired') + theme_bw() + coord_flip() + ylab('Probability') + xlab('Cluster') + guides(fill=guide_legend(title=NULL, size = 1))
 
